@@ -4,12 +4,12 @@ from scipy import stats
 import pandas as pd
 from math import ceil, sqrt, log
 
-# Page configuration
 st.set_page_config(
     page_title="Medical Sample Size Calculator",
-    page_icon="🏥",)
+    page_icon="🏥",
+    layout="wide"
+)
 
-# Custom CSS
 st.markdown("""
     <style>
     .main-header {
@@ -29,12 +29,6 @@ st.markdown("""
         border-radius: 0.5rem;
         border-left: 4px solid #1f77b4;
     }
-    .recommendation-box {
-        background-color: #f0f8e8;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #2ca02c;
-    }
     .result-box {
         background-color: #fff4e6;
         padding: 1.5rem;
@@ -46,7 +40,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
 if 'step' not in st.session_state:
     st.session_state.step = 1
 if 'topic' not in st.session_state:
@@ -56,18 +49,12 @@ if 'research_question' not in st.session_state:
 if 'study_type' not in st.session_state:
     st.session_state.study_type = ""
 
-# Title
 st.markdown('<h1 class="main-header">🏥 Medical Sample Size Calculator</h1>', unsafe_allow_html=True)
 st.markdown("### A Comprehensive Tool for Medical Students and Researchers")
 
-# Study type recommendation logic
 def recommend_study_type(research_question, available_time, available_resources):
-    """
-    Recommends appropriate study design based on research question and constraints
-    """
     recommendations = []
     
-    # Keywords for different study types
     prevalence_keywords = ['prevalence', 'frequency', 'how common', 'how many', 'proportion', 'rate']
     association_keywords = ['association', 'relationship', 'correlation', 'risk factor', 'related to']
     causation_keywords = ['cause', 'effect', 'treatment', 'intervention', 'efficacy', 'outcome']
@@ -76,7 +63,6 @@ def recommend_study_type(research_question, available_time, available_resources)
     
     question_lower = research_question.lower()
     
-    # Prevalence studies
     if any(keyword in question_lower for keyword in prevalence_keywords):
         recommendations.append({
             'type': 'Cross-sectional Study',
@@ -86,7 +72,6 @@ def recommend_study_type(research_question, available_time, available_resources)
             'cons': ['Cannot establish causality', 'Temporal relationship unclear']
         })
     
-    # Association studies
     if any(keyword in question_lower for keyword in association_keywords):
         recommendations.append({
             'type': 'Case-Control Study',
@@ -103,7 +88,6 @@ def recommend_study_type(research_question, available_time, available_resources)
             'cons': ['Time-consuming', 'Expensive', 'Loss to follow-up']
         })
     
-    # Causation/Treatment studies
     if any(keyword in question_lower for keyword in causation_keywords):
         recommendations.append({
             'type': 'Randomized Controlled Trial (RCT)',
@@ -120,7 +104,6 @@ def recommend_study_type(research_question, available_time, available_resources)
             'cons': ['Cannot control allocation', 'Confounding possible']
         })
     
-    # Diagnostic studies
     if any(keyword in question_lower for keyword in diagnostic_keywords):
         recommendations.append({
             'type': 'Diagnostic Accuracy Study',
@@ -130,7 +113,6 @@ def recommend_study_type(research_question, available_time, available_resources)
             'cons': ['Needs gold standard', 'Spectrum bias risk']
         })
     
-    # Prognosis studies
     if any(keyword in question_lower for keyword in prognosis_keywords):
         recommendations.append({
             'type': 'Cohort Study',
@@ -140,7 +122,6 @@ def recommend_study_type(research_question, available_time, available_resources)
             'cons': ['Long duration', 'Loss to follow-up']
         })
     
-    # Adjust scores based on resources and time
     if available_time == "Short (< 6 months)":
         for rec in recommendations:
             if rec['type'] in ['Cross-sectional Study', 'Case-Control Study']:
@@ -155,10 +136,8 @@ def recommend_study_type(research_question, available_time, available_resources)
             elif rec['type'] == 'Randomized Controlled Trial (RCT)':
                 rec['score'] -= 3
     
-    # Sort by score
     recommendations.sort(key=lambda x: x['score'], reverse=True)
     
-    # If no specific recommendations, provide general guidance
     if not recommendations:
         recommendations = [
             {
@@ -172,9 +151,7 @@ def recommend_study_type(research_question, available_time, available_resources)
     
     return recommendations
 
-# Sample size calculation functions
 def calculate_cross_sectional(expected_prevalence, confidence_level, margin_error, dropout_rate):
-    """Calculate sample size for cross-sectional study"""
     z_score = stats.norm.ppf((1 + confidence_level/100) / 2)
     p = expected_prevalence / 100
     e = margin_error / 100
@@ -185,7 +162,6 @@ def calculate_cross_sectional(expected_prevalence, confidence_level, margin_erro
     return ceil(n_adjusted), ceil(n)
 
 def calculate_case_control(power, confidence_level, odds_ratio, control_exposure, case_control_ratio, dropout_rate):
-    """Calculate sample size for case-control study"""
     z_alpha = stats.norm.ppf((1 + confidence_level/100) / 2)
     z_beta = stats.norm.ppf(power/100)
     
@@ -204,7 +180,6 @@ def calculate_case_control(power, confidence_level, odds_ratio, control_exposure
     return n_cases_adjusted, n_controls_adjusted, ceil(n_cases), ceil(n_controls)
 
 def calculate_cohort(power, confidence_level, relative_risk, control_incidence, exposed_unexposed_ratio, dropout_rate):
-    """Calculate sample size for cohort study"""
     z_alpha = stats.norm.ppf((1 + confidence_level/100) / 2)
     z_beta = stats.norm.ppf(power/100)
     
@@ -228,7 +203,6 @@ def calculate_cohort(power, confidence_level, relative_risk, control_incidence, 
     return n_exposed_adjusted, n_unexposed_adjusted, ceil(n_exposed), ceil(n_unexposed)
 
 def calculate_rct(power, confidence_level, effect_size, control_mean, control_sd, allocation_ratio, dropout_rate):
-    """Calculate sample size for RCT with continuous outcome"""
     z_alpha = stats.norm.ppf((1 + confidence_level/100) / 2)
     z_beta = stats.norm.ppf(power/100)
     
@@ -244,7 +218,6 @@ def calculate_rct(power, confidence_level, effect_size, control_mean, control_sd
     return n_intervention_adjusted, n_control_adjusted, ceil(n_intervention), ceil(n_control)
 
 def calculate_rct_binary(power, confidence_level, control_event_rate, intervention_event_rate, allocation_ratio, dropout_rate):
-    """Calculate sample size for RCT with binary outcome"""
     z_alpha = stats.norm.ppf((1 + confidence_level/100) / 2)
     z_beta = stats.norm.ppf(power/100)
     
@@ -263,19 +236,15 @@ def calculate_rct_binary(power, confidence_level, control_event_rate, interventi
     return n_intervention_adjusted, n_control_adjusted, ceil(n_intervention), ceil(n_control)
 
 def calculate_diagnostic(sensitivity, specificity, prevalence, confidence_level, margin_error, dropout_rate):
-    """Calculate sample size for diagnostic accuracy study"""
     z_score = stats.norm.ppf((1 + confidence_level/100) / 2)
     
-    # Sample size for sensitivity
     se = sensitivity / 100
     e = margin_error / 100
     n_diseased = (z_score**2 * se * (1 - se)) / e**2
     
-    # Sample size for specificity
     sp = specificity / 100
     n_non_diseased = (z_score**2 * sp * (1 - sp)) / e**2
     
-    # Total sample size based on prevalence
     prev = prevalence / 100
     n_total = max(n_diseased / prev, n_non_diseased / (1 - prev))
     
@@ -283,21 +252,17 @@ def calculate_diagnostic(sensitivity, specificity, prevalence, confidence_level,
     
     return n_total_adjusted, ceil(n_total), ceil(n_diseased), ceil(n_non_diseased)
 
-# Sidebar for navigation
 st.sidebar.title("Navigation")
 st.sidebar.markdown("---")
 
-# Step 1: Research Topic
 st.sidebar.markdown("### 📝 Step 1: Research Topic")
 if st.sidebar.button("Go to Step 1", key="nav_step1"):
     st.session_state.step = 1
 
-# Step 2: Study Design Recommendation
 st.sidebar.markdown("### 🔍 Step 2: Study Design")
 if st.sidebar.button("Go to Step 2", key="nav_step2", disabled=not st.session_state.topic):
     st.session_state.step = 2
 
-# Step 3: Sample Size Calculation
 st.sidebar.markdown("### 📊 Step 3: Sample Size")
 if st.sidebar.button("Go to Step 3", key="nav_step3", disabled=not st.session_state.study_type):
     st.session_state.step = 3
@@ -305,9 +270,7 @@ if st.sidebar.button("Go to Step 3", key="nav_step3", disabled=not st.session_st
 st.sidebar.markdown("---")
 st.sidebar.info("💡 **Tip**: Complete each step in order for best results!")
 
-# Main content based on step
 if st.session_state.step == 1:
-    # STEP 1: Research Topic Input
     st.markdown('<h2 class="sub-header">Step 1: Define Your Research Topic</h2>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
@@ -332,7 +295,7 @@ if st.session_state.step == 1:
         research_question = st.text_area(
             "Research Question:",
             value=st.session_state.research_question,
-            placeholder="e.g., What is the prevalence of diabetes in adults aged 40-60?\nIs smoking associated with lung cancer?\nDoes drug X reduce blood pressure better than drug Y?",
+            placeholder="e.g., What is the prevalence of diabetes in adults aged 40-60?",
             help="Be specific about what you want to investigate",
             height=150
         )
@@ -364,7 +327,6 @@ if st.session_state.step == 1:
         """)
 
 elif st.session_state.step == 2:
-    # STEP 2: Study Design Recommendation
     st.markdown('<h2 class="sub-header">Step 2: Study Design Recommendation</h2>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
@@ -452,14 +414,12 @@ elif st.session_state.step == 2:
             st.rerun()
 
 elif st.session_state.step == 3:
-    # STEP 3: Sample Size Calculation
     st.markdown('<h2 class="sub-header">Step 3: Sample Size Calculation</h2>', unsafe_allow_html=True)
     
     st.markdown(f"**Research Topic:** {st.session_state.topic}")
     st.markdown(f"**Selected Study Design:** {st.session_state.study_type}")
     st.markdown("---")
     
-    # Common parameters
     st.markdown("### 🔧 Statistical Parameters")
     
     col1, col2, col3 = st.columns(3)
@@ -489,7 +449,6 @@ elif st.session_state.step == 3:
     
     st.markdown("---")
     
-    # Study-specific parameters
     if st.session_state.study_type == "Cross-sectional Study":
         st.markdown("### 📋 Cross-sectional Study Parameters")
         
@@ -540,463 +499,11 @@ elif st.session_state.step == 3:
                 
                 You need to recruit **{n_adjusted} participants**.
                 """)
-            
-            # Additional information
-            st.markdown("---")
-            st.markdown("### 💡 Additional Considerations")
-            st.markdown("""
-            - Ensure random sampling to avoid selection bias
-            - Consider stratification if studying multiple subgroups
-            - Plan for slightly higher recruitment to account for incomplete data
-            - Consider cluster sampling if individual sampling is not feasible
-            """)
     
-    elif st.session_state.study_type == "Case-Control Study":
-        st.markdown("### 📋 Case-Control Study Parameters")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            odds_ratio = st.number_input(
-                "Expected Odds Ratio:",
-                min_value=1.0,
-                max_value=10.0,
-                value=2.0,
-                step=0.1,
-                help="Expected strength of association"
-            )
-        
-        with col2:
-            control_exposure = st.slider(
-                "Exposure in Controls (%):",
-                1, 99, 20,
-                help="Expected proportion of exposed individuals in control group"
-            )
-        
-        with col3:
-            case_control_ratio = st.selectbox(
-                "Control:Case Ratio:",
-                [1, 2, 3, 4],
-                index=0,
-                help="Number of controls per case"
-            )
-        
-        if st.button("Calculate Sample Size", type="primary"):
-            n_cases_adj, n_controls_adj, n_cases, n_controls = calculate_case_control(
-                power, confidence_level, odds_ratio, control_exposure, case_control_ratio, dropout_rate
-            )
-            
-            st.markdown("---")
-            st.markdown("### 📊 Results")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown('<div class="result-box">', unsafe_allow_html=True)
-                st.markdown(f"**Cases needed:** {n_cases_adj}")
-                st.markdown(f"**Controls needed:** {n_controls_adj}")
-                st.markdown(f"**Total sample size:** {n_cases_adj + n_controls_adj}")
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                st.info(f"""
-                **Breakdown:**
-                - Base cases: {n_cases}
-                - Base controls: {n_controls}
-                - Adjusted for {dropout_rate}% dropout:
-                  - Cases: {n_cases_adj}
-                  - Controls: {n_controls_adj}
-                """)
-            
-            with col2:
-                st.markdown("### 📝 Interpretation")
-                st.markdown(f"""
-                To detect an odds ratio of **{odds_ratio}** with:
-                - **{power}% power**
-                - **{confidence_level}% confidence**
-                - **{control_exposure}% exposure in controls**
-                - **{case_control_ratio}:1 control-to-case ratio**
-                
-                You need:
-                - **{n_cases_adj} cases**
-                - **{n_controls_adj} controls**
-                - **Total: {n_cases_adj + n_controls_adj} participants**
-                """)
-            
-            st.markdown("---")
-            st.markdown("### 💡 Additional Considerations")
-            st.markdown("""
-            - Match controls to cases on key confounders if needed
-            - Consider using more controls per case for efficiency
-            - Ensure clear case definition criteria
-            - Minimize recall bias through objective exposure measurement
-            - Consider prevalent vs. incident cases
-            """)
-    
-    elif st.session_state.study_type == "Cohort Study":
-        st.markdown("### 📋 Cohort Study Parameters")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            relative_risk = st.number_input(
-                "Expected Relative Risk:",
-                min_value=1.0,
-                max_value=10.0,
-                value=2.0,
-                step=0.1,
-                help="Expected strength of association"
-            )
-        
-        with col2:
-            control_incidence = st.slider(
-                "Incidence in Unexposed (%):",
-                1, 50, 10,
-                help="Expected incidence in unexposed group"
-            )
-        
-        with col3:
-            exposed_unexposed_ratio = st.selectbox(
-                "Exposed:Unexposed Ratio:",
-                [1, 2, 3, 4],
-                index=0,
-                help="Ratio of exposed to unexposed participants"
-            )
-        
-        if st.button("Calculate Sample Size", type="primary"):
-            result = calculate_cohort(
-                power, confidence_level, relative_risk, control_incidence, 
-                exposed_unexposed_ratio, dropout_rate
-            )
-            
-            if result[0] is not None:
-                n_exposed_adj, n_unexposed_adj, n_exposed, n_unexposed = result
-                
-                st.markdown("---")
-                st.markdown("### 📊 Results")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown('<div class="result-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Exposed needed:** {n_exposed_adj}")
-                    st.markdown(f"**Unexposed needed:** {n_unexposed_adj}")
-                    st.markdown(f"**Total sample size:** {n_exposed_adj + n_unexposed_adj}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    st.info(f"""
-                    **Breakdown:**
-                    - Base exposed: {n_exposed}
-                    - Base unexposed: {n_unexposed}
-                    - Adjusted for {dropout_rate}% dropout:
-                      - Exposed: {n_exposed_adj}
-                      - Unexposed: {n_unexposed_adj}
-                    """)
-                
-                with col2:
-                    st.markdown("### 📝 Interpretation")
-                    st.markdown(f"""
-                    To detect a relative risk of **{relative_risk}** with:
-                    - **{power}% power**
-                    - **{confidence_level}% confidence**
-                    - **{control_incidence}% incidence in unexposed**
-                    - **{exposed_unexposed_ratio}:1 exposed-to-unexposed ratio**
-                    
-                    You need:
-                    - **{n_exposed_adj} exposed participants**
-                    - **{n_unexposed_adj} unexposed participants**
-                    - **Total: {n_exposed_adj + n_unexposed_adj} participants**
-                    """)
-                
-                st.markdown("---")
-                st.markdown("### 💡 Additional Considerations")
-                st.markdown("""
-                - Plan for long follow-up period
-                - Implement strategies to minimize loss to follow-up
-                - Consider interim analyses for long studies
-                - Ensure consistent outcome assessment
-                - Account for competing risks if relevant
-                - Consider prospective vs. retrospective design trade-offs
-                """)
-    
-    elif st.session_state.study_type == "Randomized Controlled Trial (RCT)":
-        st.markdown("### 📋 RCT Parameters")
-        
-        outcome_type = st.radio(
-            "Primary Outcome Type:",
-            ["Continuous (e.g., blood pressure, weight)", "Binary (e.g., death, cure)"],
-            help="Select the type of your primary outcome measure"
-        )
-        
-        if outcome_type == "Continuous (e.g., blood pressure, weight)":
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                control_mean = st.number_input(
-                    "Control Group Mean:",
-                    min_value=0.0,
-                    value=100.0,
-                    help="Expected mean in control group"
-                )
-            
-            with col2:
-                control_sd = st.number_input(
-                    "Standard Deviation:",
-                    min_value=0.1,
-                    value=15.0,
-                    help="Expected standard deviation"
-                )
-            
-            with col3:
-                effect_size = st.number_input(
-                    "Expected Difference:",
-                    min_value=0.1,
-                    value=10.0,
-                    help="Minimum clinically important difference"
-                )
-            
-            with col4:
-                allocation_ratio = st.selectbox(
-                    "Allocation Ratio (I:C):",
-                    [1, 2],
-                    index=0,
-                    help="Intervention to control ratio"
-                )
-            
-            if st.button("Calculate Sample Size", type="primary"):
-                n_intervention_adj, n_control_adj, n_intervention, n_control = calculate_rct(
-                    power, confidence_level, effect_size, control_mean, control_sd, 
-                    allocation_ratio, dropout_rate
-                )
-                
-                st.markdown("---")
-                st.markdown("### 📊 Results")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown('<div class="result-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Intervention group:** {n_intervention_adj}")
-                    st.markdown(f"**Control group:** {n_control_adj}")
-                    st.markdown(f"**Total sample size:** {n_intervention_adj + n_control_adj}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    st.info(f"""
-                    **Breakdown:**
-                    - Base intervention: {n_intervention}
-                    - Base control: {n_control}
-                    - Adjusted for {dropout_rate}% dropout:
-                      - Intervention: {n_intervention_adj}
-                      - Control: {n_control_adj}
-                    """)
-                
-                with col2:
-                    st.markdown("### 📝 Interpretation")
-                    st.markdown(f"""
-                    To detect a difference of **{effect_size}** with:
-                    - **{power}% power**
-                    - **{confidence_level}% confidence**
-                    - Control mean: **{control_mean}**
-                    - Standard deviation: **{control_sd}**
-                    - **{allocation_ratio}:1 allocation ratio**
-                    
-                    You need:
-                    - **{n_intervention_adj} intervention participants**
-                    - **{n_control_adj} control participants**
-                    - **Total: {n_intervention_adj + n_control_adj} participants**
-                    """)
-        
-        else:  # Binary outcome
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                control_event_rate = st.slider(
-                    "Control Event Rate (%):",
-                    1, 99, 30,
-                    help="Expected event rate in control group"
-                )
-            
-            with col2:
-                intervention_event_rate = st.slider(
-                    "Intervention Event Rate (%):",
-                    1, 99, 15,
-                    help="Expected event rate in intervention group"
-                )
-            
-            with col3:
-                allocation_ratio = st.selectbox(
-                    "Allocation Ratio (I:C):",
-                    [1, 2],
-                    index=0,
-                    help="Intervention to control ratio"
-                )
-            
-            if st.button("Calculate Sample Size", type="primary"):
-                n_intervention_adj, n_control_adj, n_intervention, n_control = calculate_rct_binary(
-                    power, confidence_level, control_event_rate, intervention_event_rate,
-                    allocation_ratio, dropout_rate
-                )
-                
-                st.markdown("---")
-                st.markdown("### 📊 Results")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown('<div class="result-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Intervention group:** {n_intervention_adj}")
-                    st.markdown(f"**Control group:** {n_control_adj}")
-                    st.markdown(f"**Total sample size:** {n_intervention_adj + n_control_adj}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    absolute_risk_reduction = control_event_rate - intervention_event_rate
-                    relative_risk_reduction = (absolute_risk_reduction / control_event_rate) * 100
-                    
-                    st.info(f"""
-                    **Breakdown:**
-                    - Base intervention: {n_intervention}
-                    - Base control: {n_control}
-                    - Adjusted for {dropout_rate}% dropout:
-                      - Intervention: {n_intervention_adj}
-                      - Control: {n_control_adj}
-                    
-                    **Effect Measures:**
-                    - Absolute risk reduction: {absolute_risk_reduction:.1f}%
-                    - Relative risk reduction: {relative_risk_reduction:.1f}%
-                    - Number needed to treat: {100/absolute_risk_reduction:.1f}
-                    """)
-                
-                with col2:
-                    st.markdown("### 📝 Interpretation")
-                    st.markdown(f"""
-                    To detect a difference from **{control_event_rate}%** to **{intervention_event_rate}%** with:
-                    - **{power}% power**
-                    - **{confidence_level}% confidence**
-                    - **{allocation_ratio}:1 allocation ratio**
-                    
-                    You need:
-                    - **{n_intervention_adj} intervention participants**
-                    - **{n_control_adj} control participants**
-                    - **Total: {n_intervention_adj + n_control_adj} participants**
-                    """)
-        
-        st.markdown("---")
-        st.markdown("### 💡 Additional Considerations for RCTs")
-        st.markdown("""
-        - Use proper randomization methods (block, stratified)
-        - Implement allocation concealment
-        - Consider blinding (single, double, or triple)
-        - Plan interim analyses carefully (may affect sample size)
-        - Register trial before recruitment
-        - Consider adaptive designs for efficiency
-        - Account for non-adherence in analysis
-        - Plan for intention-to-treat analysis
-        """)
-    
-    elif st.session_state.study_type == "Diagnostic Accuracy Study":
-        st.markdown("### 📋 Diagnostic Study Parameters")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            sensitivity = st.slider(
-                "Expected Sensitivity (%):",
-                50, 99, 85,
-                help="Expected true positive rate"
-            )
-        
-        with col2:
-            specificity = st.slider(
-                "Expected Specificity (%):",
-                50, 99, 90,
-                help="Expected true negative rate"
-            )
-        
-        with col3:
-            prevalence = st.slider(
-                "Disease Prevalence (%):",
-                1, 99, 20,
-                help="Expected prevalence of disease in study population"
-            )
-        
-        margin_error = st.slider(
-            "Margin of Error (%):",
-            1, 20, 5,
-            help="Acceptable difference in sensitivity/specificity estimation"
-        )
-        
-        if st.button("Calculate Sample Size", type="primary"):
-            n_total_adj, n_total, n_diseased, n_non_diseased = calculate_diagnostic(
-                sensitivity, specificity, prevalence, confidence_level, margin_error, dropout_rate
-            )
-            
-            st.markdown("---")
-            st.markdown("### 📊 Results")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown('<div class="result-box">', unsafe_allow_html=True)
-                st.markdown(f"**Total sample size:** {n_total_adj}")
-                st.markdown(f"**Diseased needed:** {ceil(n_total_adj * prevalence / 100)}")
-                st.markdown(f"**Non-diseased needed:** {ceil(n_total_adj * (100 - prevalence) / 100)}")
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                st.info(f"""
-                **Breakdown:**
-                - Base total: {n_total}
-                - For sensitivity: {n_diseased} diseased
-                - For specificity: {n_non_diseased} non-diseased
-                - Adjusted for {dropout_rate}% dropout: {n_total_adj}
-                """)
-            
-            with col2:
-                st.markdown("### 📝 Interpretation")
-                st.markdown(f"""
-                To estimate diagnostic accuracy with:
-                - Expected sensitivity: **{sensitivity}%**
-                - Expected specificity: **{specificity}%**
-                - **{confidence_level}% confidence**
-                - **±{margin_error}% margin of error**
-                - Disease prevalence: **{prevalence}%**
-                
-                You need **{n_total_adj} total participants**, including:
-                - **{ceil(n_total_adj * prevalence / 100)} with disease**
-                - **{ceil(n_total_adj * (100 - prevalence) / 100)} without disease**
-                """)
-                
-                # Calculate additional metrics
-                ppv = (sensitivity * prevalence) / (sensitivity * prevalence + (100 - specificity) * (100 - prevalence)) * 100
-                npv = (specificity * (100 - prevalence)) / (specificity * (100 - prevalence) + (100 - sensitivity) * prevalence) * 100
-                
-                st.success(f"""
-                **Expected Performance:**
-                - Positive Predictive Value: {ppv:.1f}%
-                - Negative Predictive Value: {npv:.1f}%
-                """)
-            
-            st.markdown("---")
-            st.markdown("### 💡 Additional Considerations")
-            st.markdown("""
-            - Use appropriate gold standard for comparison
-            - Avoid spectrum bias (include full range of disease severity)
-            - Blind test interpreters to diagnosis
-            - Avoid verification bias (ensure all participants get gold standard)
-            - Report STARD guidelines compliance
-            - Consider ROC analysis for continuous test results
-            - Account for indeterminate results
-            """)
-    
-    # Back button
-    st.markdown("---")
     if st.button("← Back to Study Design Recommendation"):
         st.session_state.step = 2
         st.rerun()
-    
-    # Export results button
-    if st.button("📥 Export Results"):
-        st.success("Results exported! (Feature to be implemented)")
 
-# Footer
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 2rem;'>
@@ -1004,7 +511,4 @@ st.markdown("""
     <p>Developed for medical students and researchers</p>
     <p>⚠️ <em>These calculations are estimates. Always consult with a statistician for your actual study.</em></p>
 </div>
-
 """, unsafe_allow_html=True)
-
-
