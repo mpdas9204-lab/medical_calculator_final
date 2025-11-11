@@ -7,7 +7,7 @@ from math import ceil, sqrt, log
 # Page configuration
 st.set_page_config(
     page_title="Medical Sample Size Calculator",
-    page_icon="🏥",
+    page_icon="🏥",)
 
 # Custom CSS
 st.markdown("""
@@ -1006,4 +1006,5 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
+
 
