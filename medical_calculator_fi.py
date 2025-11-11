@@ -1,9 +1,3 @@
-import streamlit as st
-import numpy as np
-from scipy import stats
-import pandas as pd
-from math import ceil, sqrt, log
-
 # Page configuration
 st.set_page_config(
     page_title="Medical Sample Size Calculator",
@@ -1006,4 +1000,5 @@ st.markdown("""
     <p>Developed for medical students and researchers</p>
     <p>⚠️ <em>These calculations are estimates. Always consult with a statistician for your actual study.</em></p>
 </div>
+
 """, unsafe_allow_html=True)
